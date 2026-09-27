@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { Leaderboard, type LeaderboardRow } from '@/components/leaderboard'
-import { COLS, ROWS, formatTime, generateMaze, todayUtc, type Point } from '@/lib/maze'
+import { COLS, ROWS, formatTime, generateMaze, msUntilLocalMidnight, todayLocal, type Point } from '@/lib/maze'
 
 const CELL = 22
 type Dir = 'up' | 'down' | 'left' | 'right'
@@ -24,8 +24,34 @@ function getPlayerId() {
   return id
 }
 
+function formatCountdown(ms: number) {
+  const total = Math.max(0, Math.floor(ms / 1000))
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`
+}
+
 export function MazeRace() {
-  const date = useMemo(() => todayUtc(), [])
+  const [date, setDate] = useState<string | null>(null)
+  const [resetIn, setResetIn] = useState('')
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date()
+      setDate(todayLocal(now))
+      setResetIn(formatCountdown(msUntilLocalMidnight(now)))
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!date) return <p className="small">Loading today&apos;s maze…</p>
+  return <MazeGame key={date} date={date} resetIn={resetIn} />
+}
+
+function MazeGame({ date, resetIn }: { date: string; resetIn: string }) {
   const maze = useMemo(() => generateMaze(date), [date])
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -270,7 +296,7 @@ export function MazeRace() {
         )}
       </section>
 
-      <Leaderboard rows={lb?.top} loading={!playerId || lbLoading} error={!!lbError} playerId={playerId} />
+      <Leaderboard rows={lb?.top} loading={!playerId || lbLoading} error={!!lbError} playerId={playerId} resetIn={resetIn} />
     </div>
   )
 }

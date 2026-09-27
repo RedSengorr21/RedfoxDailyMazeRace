@@ -7,11 +7,13 @@ export function Leaderboard({
   loading,
   error,
   playerId,
+  resetIn,
 }: {
   rows: LeaderboardRow[] | undefined
   loading: boolean
   error: boolean
   playerId: string | null
+  resetIn?: string
 }) {
   return (
     <aside className="side" aria-labelledby="lb-title">
@@ -34,7 +36,9 @@ export function Leaderboard({
           ))
         )}
       </ol>
-      <p className="small">Resets daily at 00:00 UTC.</p>
+      <p className="small">
+        Resets at midnight your local time{resetIn ? ` — in ${resetIn}` : ''}.
+      </p>
     </aside>
   )
 }
