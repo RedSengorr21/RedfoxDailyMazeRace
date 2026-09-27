@@ -9,11 +9,27 @@ export function todayUtc(now = new Date()) {
   return now.toISOString().slice(0, 10)
 }
 
+export function todayLocal(now = new Date()) {
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+export function msUntilLocalMidnight(now = new Date()) {
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  return next.getTime() - now.getTime()
+}
+
+const HOUR = 60 * 60 * 1000
+
+// Accepts any date that is "today" somewhere on Earth (UTC-12 … UTC+14), plus a 1h grace for runs finishing just after midnight.
 export function isValidRaceDate(value: unknown): value is string {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-  const now = new Date()
-  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  return value === todayUtc(now) || value === todayUtc(yesterday)
+  const now = Date.now()
+  const earliest = todayUtc(new Date(now - 13 * HOUR))
+  const latest = todayUtc(new Date(now + 14 * HOUR))
+  return value >= earliest && value <= latest
 }
 
 function hashSeed(s: string) {
