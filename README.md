@@ -17,7 +17,7 @@ This is a single self-contained `daily-maze.html` file — no build step, no dep
 
 ```
 your-project/
-  daily-maze.html
+  Redfox-daily-maze-race.html
   README.md
 ```
 
